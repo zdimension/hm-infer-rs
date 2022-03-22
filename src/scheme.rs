@@ -2,22 +2,8 @@ use std::fmt;
 use std::fmt::{Display, Formatter};
 use std::iter::Peekable;
 use std::str::{CharIndices, FromStr};
-use itertools::Itertools;
 
-/*macro_rules! expect
-{
-    ($i: ident, $t:ty) =>
-    {
-        fn $i(&self) -> Option<_>
-        {
-            match self
-            {
-                $t(n) => Some(n),
-                _ => None
-            }
-        }
-    }
-}*/
+use itertools::Itertools;
 
 #[derive(Debug, Clone)]
 pub enum SExpr
@@ -61,10 +47,7 @@ impl<'a> SchemeParser<'a>
 
     fn expect(&mut self, c: char) -> Result<(), ReadError>
     {
-        if self.accept(c)
-        {
-            Ok(())
-        } else {
+        if self.accept(c) { Ok(()) } else {
             let x = self.1.peek().unwrap().0;
             println!("{:?}", &self.0[x..]);
             Err(ReadError::CharacterExpected(c, self.1.peek().map(|&(_, ch)| ch)))
