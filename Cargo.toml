@@ -1,0 +1,11 @@
+[package]
+name = "hm-infer-rs"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+itertools = "0.10.3"
+lexpr = "0.2.6"
+typed-arena = "2.0.1"
