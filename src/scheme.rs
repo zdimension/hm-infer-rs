@@ -3,7 +3,6 @@ use std::fmt::{Display, Formatter};
 use std::iter::Peekable;
 use std::str::{CharIndices, FromStr};
 use itertools::Itertools;
-use SExpr::*;
 
 /*macro_rules! expect
 {
