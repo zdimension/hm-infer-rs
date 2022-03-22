@@ -2,17 +2,14 @@ use typed_arena::Arena;
 
 use scheme::SExpr;
 
-
+mod infer;
 mod scheme;
 mod typing;
-mod infer;
 
-use typing::*;
 use typing::BaseType::*;
+use typing::*;
 
-
-pub struct Environment<'a>
-{
+pub struct Environment<'a> {
     pub int_type: &'a BaseType<'a>,
     pub bool_type: &'a BaseType<'a>,
     pub str_type: &'a BaseType<'a>,
@@ -20,22 +17,17 @@ pub struct Environment<'a>
     pub arena: &'a Arena<BaseType<'a>>,
 }
 
-macro_rules! tests
-{
-    ($($n: ident: ($a: literal, $b: literal)),*) =>
-    {
+macro_rules! tests {
+    ($($n: ident: ($a: literal, $b: literal)),*) => {
         $(
             #[test]
-            fn $n()
-            {
+            fn $n() {
                 let arena = Arena::new();
 
                 let op = |name: &str, params| arena.alloc(TypeOperator(name.to_string(), params));
                 let var = || arena.alloc(TypeVariable(Cell::new(None)));
-                fn fn_type<'a, 'b>(arena: &'a Arena<BaseType<'a>>, args: &'b [&'a BaseType<'a>]) -> &'a BaseType<'a>
-                {
-                    if args.len() == 1
-                    {
+                fn fn_type<'a, 'b>(arena: &'a Arena<BaseType<'a>>, args: &'b [&'a BaseType<'a>]) -> &'a BaseType<'a> {
+                    if args.len() == 1 {
                         args[0]
                     } else {
                         let asplit = args.split_at(1);
@@ -104,13 +96,12 @@ macro_rules! tests
     }
 }
 
-mod tests
-{
+mod tests {
     use super::*;
+    use infer::analyze;
+    use scheme::SExpr;
     use std::cell::Cell;
     use std::collections::HashMap;
-    use scheme::SExpr;
-    use infer::analyze;
 
     tests![
         pair_def: ("pair", "(a -> (b -> (a * b)))"),
