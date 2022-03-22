@@ -12,7 +12,7 @@ pub enum BaseType<'a> {
 }
 
 impl<'a> BaseType<'a> {
-    pub fn resolve(&self) -> &BaseType<'a> {
+    pub fn resolve(&self) -> &Self {
         match self {
             TypeVariable(cell) => {
                 if let Some(t) = cell.get() {
@@ -25,7 +25,7 @@ impl<'a> BaseType<'a> {
         }
     }
 
-    pub fn contains(&self, needle: &'a BaseType<'a>) -> bool {
+    pub fn contains(&self, needle: &Self) -> bool {
         let (needle, haystack) = (needle.resolve(), self.resolve());
         match haystack {
             TypeVariable(_) => std::ptr::eq(needle, haystack),
@@ -39,7 +39,7 @@ impl<'a> BaseType<'a> {
         }
     }
 
-    pub fn unify(&'a self, t2: &'a BaseType<'a>) {
+    pub fn unify(&'a self, t2: &'a Self) {
         let (t1, t2) = (self.resolve(), t2.resolve());
         match (t1, t2) {
             (TypeVariable(cell1), _) => {
@@ -69,11 +69,11 @@ impl<'a> BaseType<'a> {
 
     pub fn duplicate(
         &'a self,
-        arena: &'a Arena<BaseType<'a>>,
-        map: &mut HashMap<ByAddress<&'a BaseType<'a>>, &'a BaseType<'a>>,
-        ngen: &[&'a BaseType<'a>],
-    ) -> &'a BaseType<'a> {
-        let ty: &BaseType = self.resolve();
+        arena: &'a Arena<Self>,
+        map: &mut HashMap<ByAddress<&'a Self>, &'a Self>,
+        ngen: &[&'a Self],
+    ) -> &'a Self {
+        let ty = self.resolve();
         match ty {
             TypeVariable(_) => {
                 if ngen.iter().any(|t| t.contains(ty)) {
@@ -102,7 +102,7 @@ impl<'a> Debug for &BaseType<'a> {
 impl<'a> Display for BaseType<'a> {
     fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
         let letter = Cell::new(b'a');
-        let mut vars: HashMap<ByAddress<&BaseType>, char> = HashMap::new();
+        let mut vars: HashMap<ByAddress<&Self>, char> = HashMap::new();
         fn aux<'a, 'b>(
             t: &'a BaseType<'b>,
             letter: &Cell<u8>,
