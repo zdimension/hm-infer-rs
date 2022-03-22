@@ -140,13 +140,3 @@ mod tests
         sets: ("(let ((multiple (lambda (k) (lambda (x) (= (modulo x k) 0)))) (singleton =) (union (lambda (a b) (lambda (x) (or (a x) (b x))))) (in? (lambda (n ens) (ens n)))) (in? 1 (union (multiple 5) (singleton 2))))", "bool")
     ];
 }
-
-mod tests2
-{
-    #[test]
-    fn bidule()
-    {
-        assert_eq!(1, 1);
-        assert_eq!(,);
-    }
-}
