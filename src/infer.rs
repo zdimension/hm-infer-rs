@@ -29,7 +29,6 @@ pub fn analyze<'a>(
                 let head = list.first().ok_or("expected head").unwrap();
 
                 match head {
-                    //todo
                     Symbol(n) if n == "let" => {
                         let mut newenv = syms.clone();
                         for binding in match list.get(1) {
