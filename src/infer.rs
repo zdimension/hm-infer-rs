@@ -33,7 +33,7 @@ pub fn analyze<'a>(
                         let mut newenv = syms.clone();
                         for binding in match list.get(1) {
                             Some(List(items)) => items,
-                            _ => panic!("let: expected list of bindings"),
+                            _ => panic!("let*: expected list of bindings"),
                         } {
                             if let List(items) = &binding {
                                 if let [Symbol(name), val] = &items[..] {
