@@ -69,7 +69,7 @@ macro_rules! build_env {
             let t3 = var();
             let t4 = var();
 
-            let syms = make_env![
+            let mut syms = make_env![
             "+": ft(&[int, int, int]),
             "-": ft(&[int, int, int]),
             "*": ft(&[int, int, int]),

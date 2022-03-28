@@ -12,7 +12,7 @@ mod tests {
                 fn $n() {
                     build_env!({
                         let left: SExpr = $a.parse().unwrap();
-                        assert_eq!(env.analyze(&left, &syms).to_string(), $b);
+                        assert_eq!(env.analyze(&left, &mut syms).unwrap().to_string(), $b);
                     });
                 }
             )*

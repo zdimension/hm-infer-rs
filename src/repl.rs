@@ -13,10 +13,13 @@ pub fn launch_repl()
             io::stdout().flush().unwrap();
             match io::stdin().read_line(&mut input) {
                 Ok(n) => {
-                    let expr: SExpr = input.parse().unwrap();
-                    println!("{}", env.analyze(&expr, &syms));
-                }
-                Err(error) => println!("error: {}", error),
+                    match input.parse().map(|e: SExpr| env.analyze(&e, &mut syms)) {
+                        Ok(Ok(res)) => println!("{}", res),
+                        Ok(Err(msg)) => println!("analysis error: {}", msg),
+                        Err(e) => println!("parse error: {}", e),
+                    }
+                },
+                Err(error) => break
             }
         }
     });

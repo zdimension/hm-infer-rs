@@ -19,8 +19,28 @@ struct SchemeParser<'a>(&'a str, Peekable<CharIndices<'a>>);
 #[derive(Debug)]
 pub enum ReadError {
     CharacterExpected(char, Option<char>),
+    EOFExpected(char),
     IntParseError,
     BoolParseError(Option<char>),
+}
+
+impl Display for ReadError {
+    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+        match self {
+            ReadError::CharacterExpected(c, Some(next)) => {
+                write!(f, "expected '{}' but found '{}'", c, next)
+            }
+            ReadError::CharacterExpected(c, None) => {
+                write!(f, "expected '{}' but found EOF", c)
+            }
+            ReadError::EOFExpected(c) => write!(f, "expected EOF but found '{}'", c),
+            ReadError::IntParseError => write!(f, "invalid integer"),
+            ReadError::BoolParseError(Some(next)) => {
+                write!(f, "expected '#t' or '#f' but found '{}'", next)
+            },
+            ReadError::BoolParseError(None) => write!(f, "got EOF while parsing boolean"),
+        }
+    }
 }
 
 impl<'a> SchemeParser<'a> {
@@ -134,13 +154,22 @@ impl<'a> SchemeParser<'a> {
             _ => self.read_symbol(),
         }
     }
+
+    fn read_whole(&mut self) -> Result<SExpr, ReadError> {
+        let res = self.read();
+        self.skip_while(char::is_whitespace);
+        match self.1.peek() {
+            Some(&(_, ch)) => Err(ReadError::EOFExpected(ch)),
+            None => res
+        }
+    }
 }
 
 impl FromStr for SExpr {
     type Err = ReadError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        SchemeParser::new(s).read()
+        SchemeParser::new(s).read_whole()
     }
 }
 
