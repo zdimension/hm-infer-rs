@@ -17,6 +17,14 @@ pub struct Environment<'a> {
     pub arena: &'a Arena<BaseType<'a>>,
 }
 
+macro_rules! env {
+    ($($s:literal: $e:expr),*) => {
+        HashMap::from([
+            $((String::from($s), $e)),*
+        ])
+    }
+}
+
 macro_rules! tests {
     ($($n: ident: ($a: literal, $b: literal)),*) => {
         $(
@@ -48,37 +56,37 @@ macro_rules! tests {
                 let t3 = var();
                 let t4 = var();
 
-                let syms = HashMap::from([
-                    ("+", ft(&[int, int, int])),
-                    ("-", ft(&[int, int, int])),
-                    ("*", ft(&[int, int, int])),
-                    ("/", ft(&[int, int, int])),
-                    ("modulo", ft(&[int, int, int])),
-                    ("=", ft(&[int, int, bool])),
-                    ("zero", ft(&[int, bool])),
-                    ("succ", ft(&[int, int])),
-                    ("pred", ft(&[int, int])),
-                    ("and", ft(&[bool, bool, bool])),
-                    ("or", ft(&[bool, bool, bool])),
-                    ("error", ft(&[str, bottom])),
-                    ("if", ft(&[bool, t1, t1, t1])),
-                    ("pair", ft(&[t1, t2, op("*", vec![t1, t2])])),
-                    ("car", ft(&[op("*", vec![t1, t2]), t1])),
-                    ("cdr", ft(&[op("*", vec![t1, t2]), t2])),
-                    ("nil", op("list", vec![t1])),
-                    ("cons", ft(&[t1, op("list", vec![t1]), op("list", vec![t1])])),
-                    ("hd", ft(&[op("list", vec![t1]), t1])),
-                    ("tl", ft(&[op("list", vec![t1]), op("list", vec![t1])])),
-                    ("null?", ft(&[op("list", vec![t1]), bool])),
-                    ("map", ft(&[ft(&[t1, t2]), op("list", vec![t1]), op("list", vec![t2])])),
-                    ("for-each", ft(&[ft(&[t1, unit]), op("list", vec![t1]), unit])),
-                    ("left", ft(&[t1, op("either", vec![t1, t2])])),
-                    ("right", ft(&[t2, op("either", vec![t1, t2])])),
-                    ("either", ft(&[op("either", vec![t1, t2]), ft(&[t1, t3]), ft(&[t2, t4]), op("either", vec![t3, t4])])),
-                    ("just", ft(&[t1, op("option", vec![t1])])),
-                    ("nothing", op("option", vec![t1])),
-                    ("maybe", ft(&[op("option", vec![t1]), ft(&[t1, t2]), op("option", vec![t2])]))
-                ]);
+                let syms = env![
+                    "+": ft(&[int, int, int]),
+                    "-": ft(&[int, int, int]),
+                    "*": ft(&[int, int, int]),
+                    "/": ft(&[int, int, int]),
+                    "modulo": ft(&[int, int, int]),
+                    "=": ft(&[int, int, bool]),
+                    "zero": ft(&[int, bool]),
+                    "succ": ft(&[int, int]),
+                    "pred": ft(&[int, int]),
+                    "and": ft(&[bool, bool, bool]),
+                    "or": ft(&[bool, bool, bool]),
+                    "error": ft(&[str, bottom]),
+                    "if": ft(&[bool, t1, t1, t1]),
+                    "pair": ft(&[t1, t2, op("*", vec![t1, t2])]),
+                    "car": ft(&[op("*", vec![t1, t2]), t1]),
+                    "cdr": ft(&[op("*", vec![t1, t2]), t2]),
+                    "nil": op("list", vec![t1]),
+                    "cons": ft(&[t1, op("list", vec![t1]), op("list", vec![t1])]),
+                    "hd": ft(&[op("list", vec![t1]), t1]),
+                    "tl": ft(&[op("list", vec![t1]), op("list", vec![t1])]),
+                    "null?": ft(&[op("list", vec![t1]), bool]),
+                    "map": ft(&[ft(&[t1, t2]), op("list", vec![t1]), op("list", vec![t2])]),
+                    "for-each": ft(&[ft(&[t1, unit]), op("list", vec![t1]), unit]),
+                    "left": ft(&[t1, op("either", vec![t1, t2])]),
+                    "right": ft(&[t2, op("either", vec![t1, t2])]),
+                    "either": ft(&[op("either", vec![t1, t2]), ft(&[t1, t3]), ft(&[t2, t4]), op("either", vec![t3, t4])]),
+                    "just": ft(&[t1, op("option", vec![t1])]),
+                    "nothing": op("option", vec![t1]),
+                    "maybe": ft(&[op("option", vec![t1]), ft(&[t1, t2]), op("option", vec![t2])])
+                ];
 
                 let env = Environment
                 {
@@ -104,6 +112,7 @@ mod tests {
     use std::collections::HashMap;
 
     tests![
+        comp: ("(lambda (f g) (lambda (x) (f (g x))))", "((a -> b) -> ((c -> a) -> (c -> b)))"),
         pair_def: ("pair", "(a -> (b -> (a * b)))"),
         bottom_1: ("(error \"this returns the bottom type (forall a. a)\")", "a"),
         bottom_2: ("(lambda (x) (if (zero x) (error \"divide by zero\") (/ 1 x)))", "(int -> int)"),
@@ -128,6 +137,10 @@ mod tests {
         maybe_nothing: ("(let ((x nothing)) (maybe x (= 123)))", "(option bool)"),
         either_left: ("(let ((x (left 5))) (either x (= 123) (lambda (bool) 456)))", "(either bool int)"),
         kons: ("(let* ((kons (lambda (a b) (lambda (f) (f a b)))) (kar (lambda (p) (p (lambda (a d) a)))) (kdr (lambda (p) (p (lambda (a d) d)))) (test (kons 8 #t))) (pair (kar test) (kdr test)))", "(int * bool)"),
-        sets: ("(let ((multiple (lambda (k) (lambda (x) (= (modulo x k) 0)))) (singleton =) (union (lambda (a b) (lambda (x) (or (a x) (b x))))) (in? (lambda (n ens) (ens n)))) (in? 1 (union (multiple 5) (singleton 2))))", "bool")
+        sets: (r#"(let ((multiple (lambda (k) (lambda (x) (= (modulo x k) 0))))
+                        (singleton =) (union (lambda (a b) (lambda (x) (or (a x) (b x)))))
+                        (in? (lambda (n ens) (ens n))))
+                       (in? 1 (union (multiple 5) (singleton 2))))"#, "bool"),
+        begin: (r"(begin (define x 5) (define y (+ x 1)) y)", "int")
     ];
 }
