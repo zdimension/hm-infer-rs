@@ -9,3 +9,12 @@ edition = "2021"
 by_address = "1.0.4"
 itertools = "0.10.3"
 typed-arena = "2.0.1"
+unhygienic = "0.1.1"
+
+[lib]
+name = "lib"
+path = "src/lib.rs"
+
+[[bin]]
+name = "repl"
+path = "src/cli.rs"

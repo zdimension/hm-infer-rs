@@ -21,6 +21,7 @@ dependencies = [
  "by_address",
  "itertools",
  "typed-arena",
+ "unhygienic",
 ]
 
 [[package]]
@@ -33,7 +34,41 @@ dependencies = [
 ]
 
 [[package]]
+name = "proc-macro-hack"
+version = "0.4.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d7f95648580798cc44ff8efb9bb0d7ee5205ea32e087b31b0732f3e8c2648ee2"
+dependencies = [
+ "proc-macro-hack-impl",
+]
+
+[[package]]
+name = "proc-macro-hack-impl"
+version = "0.4.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7be55bf0ae1635f4d7c7ddd6efc05c631e98a82104a73d35550bbc52db960027"
+
+[[package]]
 name = "typed-arena"
 version = "2.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0685c84d5d54d1c26f7d3eb96cd41550adb97baed141a761cf335d3d33bcd0ae"
+
+[[package]]
+name = "unhygienic"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3058ae8ba74c04dbc771b659450e1b595a45ae55906ef2c3fcb45df45cef3e93"
+dependencies = [
+ "proc-macro-hack",
+ "unhygienic-impl",
+]
+
+[[package]]
+name = "unhygienic-impl"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a40394f024d8b7e598419922124b57857b6f06e110df68790cdcfcdb55da4f35"
+dependencies = [
+ "proc-macro-hack",
+]
