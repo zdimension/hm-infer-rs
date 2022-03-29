@@ -18,6 +18,7 @@ struct SchemeParser<'a>(&'a str, Peekable<CharIndices<'a>>);
 
 #[derive(Debug)]
 pub enum ReadError {
+    EOFFound,
     CharacterExpected(char, Option<char>),
     EOFExpected(char),
     IntParseError,
@@ -27,6 +28,7 @@ pub enum ReadError {
 impl Display for ReadError {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         match self {
+            ReadError::EOFFound => write!(f, "expected input but found EOF"),
             ReadError::CharacterExpected(c, Some(next)) => {
                 write!(f, "expected '{}' but found '{}'", c, next)
             }
@@ -151,7 +153,8 @@ impl<'a> SchemeParser<'a> {
             Some(&(_, '#')) => self.read_boolean(),
             Some(&(_, '"')) => self.read_string(),
             Some(&(_, ch)) if ch.is_digit(10) => self.read_number(),
-            _ => self.read_symbol(),
+            Some(&(_, ch)) => self.read_symbol(),
+            None => Err(ReadError::EOFFound),
         }
     }
 
