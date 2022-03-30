@@ -39,32 +39,33 @@ impl<'a> BaseType<'a> {
         }
     }
 
-    pub fn unify(&'a self, t2: &'a Self) {
+    pub fn unify(&'a self, t2: &'a Self) -> Result<(), String> {
         let (t1, t2) = (self.resolve(), t2.resolve());
         match (t1, t2) {
             (TypeVariable(cell1), _) => {
                 if !std::ptr::eq(t1, t2) {
                     if t2.contains(t1) {
-                        panic!("recursive unification between '{}' and '{}'", t1, t2);
+                        return Err(format!("recursive unification between '{}' and '{}'", t1, t2));
                     }
                     cell1.set(Some(t2));
                 }
             }
             (_, TypeVariable(_)) => {
-                t2.unify(t1);
+                t2.unify(t1)?;
             }
             (TypeOperator(name1, args1), TypeOperator(name2, args2)) => {
                 if name1 != name2 {
-                    panic!("can't unify different types '{}' and '{}'", t1, t2);
+                    return Err(format!("can't unify different types '{}' and '{}'", t1, t2));
                 }
                 if args1.len() != args2.len() {
-                    panic!("type operator arity mismath between '{}' and '{}'", t1, t2);
+                    return Err(format!("type operator arity mismath between '{}' and '{}'", t1, t2));
                 }
                 for (arg1, arg2) in args1.iter().zip(args2.iter()) {
-                    arg1.unify(arg2);
+                    arg1.unify(arg2)?;
                 }
             }
-        }
+        };
+        Ok(())
     }
 
     pub fn duplicate(

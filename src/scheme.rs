@@ -152,8 +152,12 @@ impl<'a> SchemeParser<'a> {
             Some(&(_, '(' | '[')) => self.read_list(),
             Some(&(_, '#')) => self.read_boolean(),
             Some(&(_, '"')) => self.read_string(),
+            Some(&(_, '\'')) => {
+                self.1.next();
+                Ok(SExpr::List(vec![SExpr::Symbol("quote".to_string()), self.read()?]))
+            }
             Some(&(_, ch)) if ch.is_digit(10) => self.read_number(),
-            Some(&(_, ch)) => self.read_symbol(),
+            Some(_) => self.read_symbol(),
             None => Err(ReadError::EOFFound),
         }
     }

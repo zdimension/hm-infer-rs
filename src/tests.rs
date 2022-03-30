@@ -1,17 +1,11 @@
-use std::cell::Cell;
-use std::collections::HashMap;
-
-use crate::build_env;
-use crate::scheme::SExpr;
-
-use super::*;
-
 macro_rules! tests {
     ($($n: ident: ($a: literal, $b: literal)),*) => {
         $(
             #[test]
             fn $n() {
+                use crate::build_env;
                 build_env!({
+                    use crate::scheme::SExpr;
                     let left: SExpr = $a.parse().unwrap();
                     assert_eq!(env.analyze(&left, &mut syms).unwrap().to_string(), $b);
                 });

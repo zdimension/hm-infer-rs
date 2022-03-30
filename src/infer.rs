@@ -92,7 +92,7 @@ impl <'a> Environment<'a>
                                     env,
                                     &mut newenv,
                                     &ftypes.iter().map(|(_, t)| *t).collect(),
-                                )?);
+                                )?)?;
                             }
 
                             let body = list.get(2).ok_or("letrec: expected body".to_owned())?;
@@ -101,7 +101,7 @@ impl <'a> Environment<'a>
                         Symbol(n) if n == "lambda" => {
                             let (head, rest) = (match list.get(1) {
                                 Some(List(items)) => items,
-                                _ => panic!("lambda: expected list of parameters"),
+                                _ => return Err("lambda: expected list of parameters".to_owned()),
                             })
                                 .split_at(1);
                             let body = list.get(2).ok_or("lambda: expected body".to_owned())?;
@@ -137,22 +137,57 @@ impl <'a> Environment<'a>
                             let (res, stmts) = list[1..].split_last().unwrap();
                             let mut newenv = syms.clone();
                             for stmt in stmts {
-                                aux(stmt, env, &mut newenv, ngen);
+                                aux(stmt, env, &mut newenv, ngen)?;
                             }
                             aux(res, env, &mut newenv, ngen)?
                         },
                         Symbol(n) if n == "define" => {
-                            let name = match list.get(1).ok_or("define: expected name".to_owned()) {
-                                Ok(Symbol(name)) => name,
-                                _ => panic!("define: expected name"),
-                            };
-                            let val = list.get(2).ok_or("define: expected value".to_owned())?;
-                            let valtype = aux(val, env, syms, ngen)?;
-                            syms.insert(name.clone(), valtype);
-                            env.unit_type
+                            match list.get(1).ok_or_else(|| "define: expected name".to_owned()) {
+                                Ok(Symbol(name)) => {
+                                    let typevar = env.arena.alloc(TypeVariable(Cell::new(None)));
+                                    syms.insert(name.clone(), typevar);
+                                    let val = list.get(2).ok_or_else(|| "define: expected value".to_owned())?;
+                                    let valtype = aux(val, env, syms, ngen)?;
+                                    typevar.unify(valtype)?;
+                                    env.unit_type
+                                },
+                                Ok(List(vec)) => {
+                                    if let ([name], args) = vec.split_at(1) {
+                                        aux(&List(vec![
+                                            Symbol("define".into()),
+                                            name.clone(),
+                                            List(vec![
+                                                Symbol("lambda".into()),
+                                                List(args.to_vec()),
+                                                list.get(2).ok_or_else(|| "define: expected value".to_owned())?.clone(),
+                                            ])
+                                        ]), env, syms, ngen)?
+                                    } else {
+                                        return Err("define: expected name and arguments".to_owned())
+                                    }
+                                },
+                                _ => return Err("define: expected name".to_owned())
+                            }
+                        },
+                        Symbol(n) if n == "quote" => {
+                            let val = list.get(1).ok_or_else(|| "quote: expected value".to_owned())?;
+                            match val
+                            {
+                                Symbol(_) => env.symbol_type,
+                                List(items) => aux(&List(vec![
+                                    Symbol("list".into())
+                                ].iter().cloned().chain(
+                                    items.iter().map(|x| List(vec![Symbol("quote".into()), x.clone()]))
+                                ).collect()), env, syms, ngen)?,
+                                _ => aux(val, env, syms, ngen)?
+                            }
+                        },
+                        Symbol(n) if n == "list" => {
+                            let items = &list[1..];
+                            if 
                         },
                         f => {
-                            let arg = list.get(1).ok_or("expected arg").unwrap();
+                            let arg = list.get(1).ok_or_else(|| "expected arg".to_owned())?;
                             let rest = &list[2..];
                             if rest.is_empty() {
                                 let val = aux(f, env, syms, ngen)?;
@@ -161,7 +196,7 @@ impl <'a> Environment<'a>
                                 let functype = env
                                     .arena
                                     .alloc(TypeOperator("->".to_string(), vec![argtype, rettype]));
-                                functype.unify(val);
+                                functype.unify(val)?;
                                 rettype
                             } else {
                                 let inner = List(vec![f.clone(), arg.clone()]);
