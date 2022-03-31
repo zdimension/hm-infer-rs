@@ -43,7 +43,7 @@ impl <'a> Environment<'a>
                                     }
                                 }
                             }
-                            let body = list.get(2).ok_or("let: expected body".to_owned())?;
+                            let body = list.get(2).ok_or_else(|| "let: expected body".to_owned())?;
                             aux(body, env, &mut newenv, ngen)?
                         }
                         Symbol(n) if n == "let*" => {
@@ -51,7 +51,7 @@ impl <'a> Environment<'a>
                                 Some(List(items)) => items,
                                 _ => return Err("let: expected list of bindings".to_owned()),
                             };
-                            let body = list.get(2).ok_or("let*: expected body".to_owned())?;
+                            let body = list.get(2).ok_or_else(|| "let*: expected body".to_owned())?;
                             if bindings.is_empty() {
                                 aux(body, env, syms, ngen)?
                             } else {
@@ -95,7 +95,7 @@ impl <'a> Environment<'a>
                                 )?)?;
                             }
 
-                            let body = list.get(2).ok_or("letrec: expected body".to_owned())?;
+                            let body = list.get(2).ok_or_else(|| "letrec: expected body".to_owned())?;
                             aux(body, env, &mut newenv, ngen)?
                         }
                         Symbol(n) if n == "lambda" => {
@@ -104,7 +104,7 @@ impl <'a> Environment<'a>
                                 _ => return Err("lambda: expected list of parameters".to_owned()),
                             })
                                 .split_at(1);
-                            let body = list.get(2).ok_or("lambda: expected body".to_owned())?;
+                            let body = list.get(2).ok_or_else(|| "lambda: expected body".to_owned())?;
                             if rest.is_empty() {
                                 let ptype = env.arena.alloc(TypeVariable(Cell::new(None)));
                                 let mut newenv = syms.clone();
@@ -184,7 +184,16 @@ impl <'a> Environment<'a>
                         },
                         Symbol(n) if n == "list" => {
                             let items = &list[1..];
-                            if 
+                            if items.is_empty() {
+                                env.arena.alloc(TypeOperator("*".to_owned(), vec![]))
+                            } else {
+                                env.arena.alloc(TypeOperator("*".to_owned(), vec![
+                                    aux(&items[0].clone(), env, syms, ngen)?,
+                                    aux(&List(vec![
+                                        Symbol("list".to_owned())
+                                        ].iter().cloned().chain(items[1..].iter().cloned()).collect()), env, syms, ngen)?
+                                ]))
+                            }
                         },
                         f => {
                             let arg = list.get(1).ok_or_else(|| "expected arg".to_owned())?;

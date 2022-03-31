@@ -130,10 +130,12 @@ impl<'a> Display for BaseType<'a> {
                     }
                     "*" => {
                         write!(f, "(")?;
-                        aux(args[0], letter, vars, f)?;
-                        for arg in args.iter().skip(1) {
-                            write!(f, " * ")?;
-                            aux(arg, letter, vars, f)?;
+                        if !args.is_empty() {
+                            aux(args[0], letter, vars, f)?;
+                            for arg in args.iter().skip(1) {
+                                write!(f, " * ")?;
+                                aux(arg, letter, vars, f)?;
+                            }
                         }
                         write!(f, ")")
                     }
